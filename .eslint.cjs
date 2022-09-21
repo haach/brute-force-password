@@ -22,5 +22,8 @@ module.exports = {
   rules: {
     'import/prefer-default-export': 0,
     'react/react-in-jsx-scope': 0,
+    'import/no-relative-parent-imports': 'error',
+    'react/function-component-definition': 0,
+    'react/require-default-props': 0,
   },
 };
