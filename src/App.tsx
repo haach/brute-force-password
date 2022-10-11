@@ -1,4 +1,5 @@
 import { useFormik } from 'formik';
+import { useEffect, useState } from 'react';
 import { useTimer } from 'src/Timer';
 
 const bruteForceWorker = new Worker('src/BruteForceWorker.js');
@@ -23,13 +24,15 @@ interface FormValues {
 
 function App() {
   const { time, running, start, stop, reset } = useTimer();
+  const [result, setResult] = useState<number | null>(null);
+
   const formik = useFormik<FormValues>({
     initialValues: {
       ranges: {
         az: true,
-        AZ: true,
-        numerical: true,
-        special: true,
+        AZ: false,
+        numerical: false,
+        special: false,
       },
       responseTime: 0,
       pass: '',
@@ -74,16 +77,21 @@ function App() {
     onSubmit: (values) => {
       console.log('values', values);
       if (formik.isValid) {
-        console.log('Form is valid');
-        bruteForceWorker.postMessage(values);
+        setResult(null);
+        reset();
+        start(); // Start timer
+        bruteForceWorker.postMessage(values); // Send form values to worker
       }
     },
   });
+
   const receivedWorkerMessage = (e: MessageEvent) => {
+    console.log('e', e);
+    stop(); // Stop timer
     const combinations = e.data;
-    console.log('combinations', combinations);
-    console.log('result', combinations[combinations.length - 1]);
+    setResult(combinations);
   };
+
   bruteForceWorker.onmessage = receivedWorkerMessage;
 
   return (
@@ -95,14 +103,6 @@ function App() {
         allowed character ranges and enter fictionary password below. <br />
         The app then will try to brute force your password and show the time
         needed to guess your password.
-      </p>
-      <p>
-        {running ? (
-          <button onClick={() => stop()}>STOP</button>
-        ) : (
-          <button onClick={() => start()}>Start</button>
-        )}
-        <>useTimer: {time}ms</>
       </p>
       <form onSubmit={formik.handleSubmit}>
         <fieldset>
@@ -181,7 +181,16 @@ function App() {
           <div>{formik.errors.pass}</div>
         ) : null}
 
-        <button type="submit">Hack it!</button>
+        <button type="submit" disabled={running}>
+          Hack it!
+        </button>
+        {running && !result && <div>Running for {time / 10}s</div>}
+        {!running && result && (
+          <div>
+            Password "{formik.values.pass}" detected in {time / 10}s with{' '}
+            {result.toLocaleString()} combinations
+          </div>
+        )}
       </form>
     </div>
   );

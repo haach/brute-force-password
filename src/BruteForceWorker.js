@@ -34,14 +34,15 @@ function findPassword(password, ranges) {
 
   let testStringLength = 1;
   let validPassword = null;
-  const combinations = [];
+  let combinations = 0;
 
   while (testStringLength <= MAX_LENGTH && !validPassword) {
     function fn(prefix, remainingDigits) {
       if (remainingDigits === 1) {
         for (const char of ALL_CHARS) {
           const combo = String(prefix + char);
-          combinations.push(combo);
+          // combinations.push(combo);
+          combinations++;
           if (combo === password) return combo;
         }
       } else {
