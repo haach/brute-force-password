@@ -1,40 +1,49 @@
+import {
+  Alert,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Chip,
+  Grid,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
+import CssBaseline from '@mui/material/CssBaseline';
+import { ThemeProvider } from '@mui/material/styles';
 import { useFormik } from 'formik';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTimer } from 'src/Timer';
+import { customDarkTheme } from 'src/theme';
+import { AiFillCheckCircle } from 'react-icons/ai';
+import { TiDelete } from 'react-icons/ti';
 
-const bruteForceWorker = new Worker('src/BruteForceWorker.js');
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
 
 const regexRanges = {
   az: 'a-z',
   AZ: 'A-Z',
   numerical: '0-9',
-  special: '!"#$%&\'()*+,-.:;<=>?@[\\]^_`{|}~ */',
+  special: '!"#$%&\'()*+,-.:;<=>?@[\\]^_`{|}~*/',
 };
 
 interface FormValues {
-  ranges: {
-    az: boolean;
-    AZ: boolean;
-    numerical: boolean;
-    special: boolean;
-  };
-  responseTime: number;
   pass: string;
 }
 
 function App() {
+  const bruteForceWorker = new Worker('src/BruteForceWorker.js');
+
   const { time, running, start, stop, reset } = useTimer();
   const [result, setResult] = useState<number | null>(null);
+  const [detectedRanges, setDetectedRanges] = useState<Array<string>>([]);
 
   const formik = useFormik<FormValues>({
     initialValues: {
-      ranges: {
-        az: true,
-        AZ: false,
-        numerical: false,
-        special: false,
-      },
-      responseTime: 0,
       pass: '',
     },
     validate: (values) => {
@@ -43,49 +52,31 @@ function App() {
       if (!values.pass.trim()) {
         errors.pass = 'You need to enter a password to test';
       }
-      if (!!values.pass.trim()) {
-        if (values.pass.indexOf(' ') >= 0) {
-          errors.pass = 'Spaces are not allowed';
-        } else {
-          // Dynamically create regex to validate password matches char range
-          const getRangeRegex = (ranges: FormValues['ranges']) => {
-            let regex = '';
-            if (ranges.az) {
-              regex = regex + regexRanges.az;
-            }
-            if (ranges.AZ) {
-              regex = regex + regexRanges.AZ;
-            }
-            if (ranges.numerical) {
-              regex = regex + regexRanges.numerical;
-            }
-            if (ranges.special) {
-              regex = regex + regexRanges.special;
-            }
-            return regex;
-          };
-          // Get chars that do NOT match the range
-          const notMatchRegEx = new RegExp(
-            `[^${getRangeRegex(values.ranges)}]`,
-            'g'
-          );
-          const invalidChars = values.pass.match(notMatchRegEx)?.join('');
-
-          if (!!invalidChars?.length) {
-            errors.pass = `The password contains these invalid characters: ${invalidChars}`;
-          }
-        }
+      if (values.pass.indexOf(' ') >= 0) {
+        errors.pass = 'Spaces are not allowed';
       }
       return errors;
     },
     onSubmit: (values) => {
-      console.log('values', values);
       if (formik.isValid) {
         start(); // Start timer
-        bruteForceWorker.postMessage(values); // Send form values to worker
+        bruteForceWorker.postMessage({
+          password: values.pass,
+          ranges: detectedRanges,
+        }); // Send form values to worker
       }
     },
   });
+
+  const detectRanges = (pass: string) => {
+    const newRange = [];
+    for (const [key, value] of Object.entries(regexRanges)) {
+      if (pass.match(new RegExp(`[${value}]`, 'g'))) {
+        newRange.push(key);
+      }
+    }
+    setDetectedRanges(newRange);
+  };
 
   const receivedWorkerMessage = (e: MessageEvent) => {
     console.log('e', e);
@@ -97,119 +88,157 @@ function App() {
   bruteForceWorker.onmessage = receivedWorkerMessage;
 
   return (
-    <div>
-      <h1>Brute force hack my password</h1>
-      <p>
-        This app is a simple representation of the correlation in between
-        password length, character set and it's security. Simply select the
-        allowed character ranges and enter a test password below. <br />
-        The app then will try to brute force your password and show the time
-        needed to guess your password.
-      </p>
-      <p>
-        The brute force attack is done in your browser. While this is very save
-        for testing your passwords, the actual result is dependend on your
-        computers computational power and the amount of CPU your browser is
-        using from it. In a real world example there is some additional things
-        that need to be taken into consideration like the login servers response
-        time or a lock out.
-      </p>
-      <form onSubmit={formik.handleSubmit}>
-        <fieldset>
-          <legend>Ranges</legend>
-          <div>
-            <input
-              type="checkbox"
-              name="ranges.az"
-              id="az"
-              checked={formik.values.ranges.az}
-              onChange={formik.handleChange}
-              value="ranges.az"
-            />
-            <label htmlFor="az">a-z</label>
-          </div>
-          <div>
-            <input
-              type="checkbox"
-              name="ranges.AZ"
-              id="AZ"
-              checked={formik.values.ranges.AZ}
-              onChange={formik.handleChange}
-              value="ranges.AZ"
-            />
-            <label htmlFor="AZ">A-Z</label>
-          </div>
-          <div>
-            <input
-              type="checkbox"
-              name="ranges.numerical"
-              id="numerical"
-              checked={formik.values.ranges.numerical}
-              onChange={formik.handleChange}
-              value="ranges.numerical"
-            />
-            <label htmlFor="numerical">0-9</label>
-          </div>
-          <div>
-            <input
-              type="checkbox"
-              name="ranges.special"
-              id="special"
-              checked={formik.values.ranges.special}
-              onChange={formik.handleChange}
-              value="ranges.special"
-            />
-            <label htmlFor="special">
-              {`!"#$%&'()*+,-./:;<=>?@[\]^_\`{|}~`}
-            </label>
-          </div>
-        </fieldset>
-
-        {/* <div>
-          <label htmlFor="responseTime">Response time in ms</label>
-          <input
-            type="number"
-            name="responseTime"
-            id="responseTime"
-            onChange={formik.handleChange}
-            value={formik.values.responseTime}
-          />
-        </div> */}
-
-        <div>
-          <label htmlFor="pass">Your password</label>
-          <input
-            disabled={running}
-            type="text"
-            name="pass"
-            id="pass"
-            onChange={(e) => {
-              //detectRanges();
-              setResult(null);
-              reset();
-              formik.validateForm();
-              formik.handleChange(e);
+    <ThemeProvider theme={customDarkTheme}>
+      <CssBaseline />
+      <main>
+        <form onSubmit={formik.handleSubmit}>
+          <Stack
+            spacing={4}
+            maxWidth={800}
+            sx={{
+              margin: 'auto',
             }}
-            value={formik.values.pass}
-          />
-          {formik.errors.pass && formik.touched.pass ? (
-            <span style={{ color: 'red' }}>{formik.errors.pass}</span>
-          ) : null}
-        </div>
+          >
+            <Typography variant="h1">Brute force hack my password</Typography>
+            <Typography>
+              This app is a simple representation of the correlation of a
+              password's length, character set and resulting security. Simply
+              enter a test password below. The app then will try to guess your
+              password using a brute force approach and show the time and
+              combinations needed to get to the result.
+            </Typography>
 
-        <button type="submit" disabled={running}>
-          Hack it!
-        </button>
-        {running && !result && <div>Running for {time / 10}s</div>}
-        {!running && result && (
-          <div>
-            Password "{formik.values.pass}" detected{' '}
-            {time > 0 ? `in ${time / 10}s` : `in under 1 second`} with{' '}
-            {result.toLocaleString()} combinations
-          </div>
-        )}
-      </form>
-    </div>
+            <Stack
+              direction="row"
+              justifyContent="flex-start"
+              alignItems="center"
+              spacing={2}
+            >
+              <Chip
+                label="Alphabetical letters"
+                size="small"
+                icon={
+                  detectedRanges.includes('az') ? (
+                    <AiFillCheckCircle />
+                  ) : (
+                    <TiDelete />
+                  )
+                }
+                color={detectedRanges.includes('az') ? 'success' : undefined}
+              />
+              <Chip
+                label="Capital letters"
+                size="small"
+                icon={
+                  detectedRanges.includes('AZ') ? (
+                    <AiFillCheckCircle />
+                  ) : (
+                    <TiDelete />
+                  )
+                }
+                color={detectedRanges.includes('AZ') ? 'success' : undefined}
+              />
+              <Chip
+                label="Numerical characters"
+                size="small"
+                icon={
+                  detectedRanges.includes('numerical') ? (
+                    <AiFillCheckCircle />
+                  ) : (
+                    <TiDelete />
+                  )
+                }
+                color={
+                  detectedRanges.includes('numerical') ? 'success' : undefined
+                }
+              />
+              <Chip
+                label="Special characters"
+                size="small"
+                icon={
+                  detectedRanges.includes('special') ? (
+                    <AiFillCheckCircle />
+                  ) : (
+                    <TiDelete />
+                  )
+                }
+                color={
+                  detectedRanges.includes('special') ? 'success' : undefined
+                }
+              />
+            </Stack>
+            <Stack
+              direction="row"
+              justifyContent="flex-start"
+              alignItems="center"
+              spacing={2}
+            >
+              <TextField
+                required
+                name="pass"
+                label="Your test password"
+                variant="outlined"
+                disabled={running}
+                onChange={(e) => {
+                  if (time) reset();
+                  if (result) setResult(null);
+                  detectRanges(e.target.value);
+                  formik.validateForm();
+                  formik.setTouched({ pass: true });
+                  formik.handleChange(e);
+                }}
+                value={formik.values.pass}
+                helperText={formik.errors.pass}
+                error={Boolean(formik.errors.pass && formik.touched.pass)}
+                sx={{
+                  minWidth: 300,
+                }}
+              />
+
+              <Button variant="outlined" type="submit" disabled={running}>
+                Hack it!
+              </Button>
+            </Stack>
+            {running && !result && (
+              <Card>
+                <CardContent>Running for {time / 10}s</CardContent>
+                <CardActions>
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      reset();
+                      bruteForceWorker.terminate();
+                    }}
+                  >
+                    Stop
+                  </Button>
+                </CardActions>
+              </Card>
+            )}
+            {!running && result && (
+              <Card>
+                <CardContent>
+                  Password "{formik.values.pass}" detected{' '}
+                  {time > 0 ? `in ${time / 10}s` : `in under 1 second`} with{' '}
+                  {result.toLocaleString()} combinations
+                </CardContent>
+              </Card>
+            )}
+            <Alert severity="info">
+              The brute force attack is done in your browser. While this is very
+              save for testing your passwords, the actual result is dependend on
+              your machines computational power and CPU allocated to your
+              browser.
+              <br />
+              <br />
+              In a real world example there is some additional things that need
+              to be taken into consideration like the login servers response
+              time or a lock out.
+            </Alert>
+          </Stack>
+        </form>
+      </main>
+    </ThemeProvider>
   );
 }
 

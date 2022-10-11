@@ -1,5 +1,5 @@
 onmessage = function ({ data }) {
-  const password = data.pass;
+  const password = data.password;
   const ranges = data.ranges;
 
   const combinations = findPassword(password, ranges);
@@ -19,13 +19,13 @@ const fullCharSets = {
   az: 'abcdefghijklmnopqrstuvwxyz',
   AZ: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
   numerical: '0123456789',
-  special: '!"#$%&\'()*+,-.:;<=>?@[]^_`{|}~ */',
+  special: '!"#$%&\'()*+,-.:;<=>?@[]^_`{|}~*/',
 };
 function findPassword(password, ranges) {
   const MAX_LENGTH = password.length;
   const ALL_CHARS = Object.entries(fullCharSets)
     .reduce((result, [key, value]) => {
-      if (ranges[key]) {
+      if (ranges.includes(key)) {
         result = result + value;
       }
       return result;
