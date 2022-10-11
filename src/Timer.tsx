@@ -16,8 +16,8 @@ export const useTimer = (): UseTimer => {
     let interval: NodeJS.Timeout | undefined;
     if (running) {
       interval = setInterval(() => {
-        setTime((prevTime) => prevTime + 10);
-      }, 10);
+        setTime((prevTime) => prevTime + 1);
+      }, 100);
     } else if (!running) {
       clearInterval(interval);
     }
