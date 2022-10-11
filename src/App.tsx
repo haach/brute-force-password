@@ -1,18 +1,13 @@
 import { useFormik } from 'formik';
-import { useState } from 'react';
 import { useTimer } from 'src/Timer';
+
+const bruteForceWorker = new Worker('src/BruteForceWorker.js');
 
 const regexRanges = {
   az: 'a-z',
   AZ: 'A-Z',
   numerical: '0-9',
   special: '!"#$%&\'()*+,-.:;<=>?@[\\]^_`{|}~ */',
-};
-const fullCharSets = {
-  az: 'abcdefghijklmnopqrstuvwxyz',
-  AZ: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-  numerical: '012',
-  special: '!"#$%&\'()*+,-.:;<=>?@[]^_`{|}~ */',
 };
 
 interface FormValues {
@@ -80,58 +75,16 @@ function App() {
       console.log('values', values);
       if (formik.isValid) {
         console.log('Form is valid');
-        const combos = findPassword(values.pass, values.ranges);
-        console.log('combos', combos);
+        bruteForceWorker.postMessage(values);
       }
     },
   });
-
-  function asyncTimeout(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-  async function simulateServerResponse(testString: string, password: string) {
-    await asyncTimeout(formik.values.responseTime);
-    return testString === password;
-  }
-  function findPassword(password: string, ranges: FormValues['ranges']) {
-    const MAX_LENGTH = password.length;
-    const ALL_CHARS = Object.entries(fullCharSets)
-      .reduce((result, [key, value]) => {
-        if (ranges[key]) {
-          result = result + value;
-        }
-        return result;
-      }, '')
-      .split('');
-
-    let testStringLength = 1;
-    let validPassword = null;
-    const combinations = [];
-
-    while (testStringLength <= MAX_LENGTH && !validPassword) {
-      function fn(prefix, remainingDigits) {
-        if (remainingDigits === 1) {
-          for (const char of ALL_CHARS) {
-            const combo = String(prefix + char);
-            combinations.push(combo);
-            if (combo === password) return combo;
-          }
-        } else {
-          for (const char of ALL_CHARS) {
-            const res = fn(prefix + char, remainingDigits - 1);
-            if (res) {
-              validPassword = res;
-              return res;
-            }
-          }
-        }
-      }
-
-      fn('', testStringLength);
-      testStringLength++;
-    }
-    return combinations;
-  }
+  const receivedWorkerMessage = (e: MessageEvent) => {
+    const combinations = e.data;
+    console.log('combinations', combinations);
+    console.log('result', combinations[combinations.length - 1]);
+  };
+  bruteForceWorker.onmessage = receivedWorkerMessage;
 
   return (
     <div>
