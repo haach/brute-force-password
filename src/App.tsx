@@ -44,32 +44,36 @@ function App() {
         errors.pass = 'You need to enter a password to test';
       }
       if (!!values.pass.trim()) {
-        // Dynamically create regex to validate password matches char range
-        const getRangeRegex = (ranges: FormValues['ranges']) => {
-          let regex = '';
-          if (ranges.az) {
-            regex = regex + regexRanges.az;
-          }
-          if (ranges.AZ) {
-            regex = regex + regexRanges.AZ;
-          }
-          if (ranges.numerical) {
-            regex = regex + regexRanges.numerical;
-          }
-          if (ranges.special) {
-            regex = regex + regexRanges.special;
-          }
-          return regex;
-        };
-        // Get chars that do NOT match the range
-        const notMatchRegEx = new RegExp(
-          `[^${getRangeRegex(values.ranges)}]`,
-          'g'
-        );
-        const invalidChars = values.pass.match(notMatchRegEx)?.join('');
+        if (values.pass.indexOf(' ') >= 0) {
+          errors.pass = 'Spaces are not allowed';
+        } else {
+          // Dynamically create regex to validate password matches char range
+          const getRangeRegex = (ranges: FormValues['ranges']) => {
+            let regex = '';
+            if (ranges.az) {
+              regex = regex + regexRanges.az;
+            }
+            if (ranges.AZ) {
+              regex = regex + regexRanges.AZ;
+            }
+            if (ranges.numerical) {
+              regex = regex + regexRanges.numerical;
+            }
+            if (ranges.special) {
+              regex = regex + regexRanges.special;
+            }
+            return regex;
+          };
+          // Get chars that do NOT match the range
+          const notMatchRegEx = new RegExp(
+            `[^${getRangeRegex(values.ranges)}]`,
+            'g'
+          );
+          const invalidChars = values.pass.match(notMatchRegEx)?.join('');
 
-        if (!!invalidChars?.length) {
-          errors.pass = `The password contains these invalid characters: ${invalidChars}`;
+          if (!!invalidChars?.length) {
+            errors.pass = `The password contains these invalid characters: ${invalidChars}`;
+          }
         }
       }
       return errors;
@@ -77,8 +81,6 @@ function App() {
     onSubmit: (values) => {
       console.log('values', values);
       if (formik.isValid) {
-        setResult(null);
-        reset();
         start(); // Start timer
         bruteForceWorker.postMessage(values); // Send form values to worker
       }
@@ -100,9 +102,17 @@ function App() {
       <p>
         This app is a simple representation of the correlation in between
         password length, character set and it's security. Simply select the
-        allowed character ranges and enter fictionary password below. <br />
+        allowed character ranges and enter a test password below. <br />
         The app then will try to brute force your password and show the time
         needed to guess your password.
+      </p>
+      <p>
+        The brute force attack is done in your browser. While this is very save
+        for testing your passwords, the actual result is dependend on your
+        computers computational power and the amount of CPU your browser is
+        using from it. In a real world example there is some additional things
+        that need to be taken into consideration like the login servers response
+        time or a lock out.
       </p>
       <form onSubmit={formik.handleSubmit}>
         <fieldset>
@@ -155,7 +165,7 @@ function App() {
           </div>
         </fieldset>
 
-        <div>
+        {/* <div>
           <label htmlFor="responseTime">Response time in ms</label>
           <input
             type="number"
@@ -164,22 +174,28 @@ function App() {
             onChange={formik.handleChange}
             value={formik.values.responseTime}
           />
-        </div>
+        </div> */}
 
         <div>
           <label htmlFor="pass">Your password</label>
           <input
+            disabled={running}
             type="text"
             name="pass"
             id="pass"
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              //detectRanges();
+              setResult(null);
+              reset();
+              formik.validateForm();
+              formik.handleChange(e);
+            }}
             value={formik.values.pass}
           />
+          {formik.errors.pass && formik.touched.pass ? (
+            <span style={{ color: 'red' }}>{formik.errors.pass}</span>
+          ) : null}
         </div>
-
-        {formik.errors.pass && formik.touched.pass ? (
-          <div>{formik.errors.pass}</div>
-        ) : null}
 
         <button type="submit" disabled={running}>
           Hack it!
@@ -187,7 +203,8 @@ function App() {
         {running && !result && <div>Running for {time / 10}s</div>}
         {!running && result && (
           <div>
-            Password "{formik.values.pass}" detected in {time / 10}s with{' '}
+            Password "{formik.values.pass}" detected{' '}
+            {time > 0 ? `in ${time / 10}s` : `in under 1 second`} with{' '}
             {result.toLocaleString()} combinations
           </div>
         )}
