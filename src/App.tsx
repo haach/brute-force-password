@@ -5,7 +5,6 @@ import {
   CardActions,
   CardContent,
   Chip,
-  Grid,
   Stack,
   TextField,
   Typography,
@@ -13,11 +12,13 @@ import {
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
 import { useFormik } from 'formik';
-import { useMemo, useState } from 'react';
-import { useTimer } from 'src/Timer';
-import { customDarkTheme } from 'src/theme';
+import { useState } from 'react';
 import { AiFillCheckCircle } from 'react-icons/ai';
 import { TiDelete } from 'react-icons/ti';
+import { customDarkTheme } from 'src/theme';
+import { useTimer } from 'src/Timer';
+
+const bruteForceWorker = new Worker('src/BruteForceWorker.js');
 
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -36,8 +37,6 @@ interface FormValues {
 }
 
 function App() {
-  const bruteForceWorker = new Worker('src/BruteForceWorker.js');
-
   const { time, running, start, stop, reset } = useTimer();
   const [result, setResult] = useState<number | null>(null);
   const [detectedRanges, setDetectedRanges] = useState<Array<string>>([]);
