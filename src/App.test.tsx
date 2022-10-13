@@ -5,8 +5,8 @@ import App from 'src/App';
 describe('App', () => {
   it('Renders the app', () => {
     render(<App />);
-    /* expect(
+    expect(
       screen.getByText('Brute force hack my password!')
-    ).toBeInTheDocument(); */
+    ).toBeInTheDocument();
   });
 });

@@ -15,8 +15,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
+    "baseUrl": "."
   },
-  "include": ["src", ".eslintrc.cjs", "vite.config.ts"],
+  "include": ["src", "test", ".eslintrc.cjs", "vite.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
