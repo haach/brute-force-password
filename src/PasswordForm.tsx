@@ -197,12 +197,13 @@ export const PasswordForm: FC = () => {
           </Box>
         )}
         <Alert severity="info">
-          The brute force attack is done in your browser. While this is very
-          save for testing your passwords, the actual result is dependend on
-          your machines computational power and CPU allocated to your browser.
+          The brute force algorythm runs locally inside your browser. While this
+          is very save for testing your passwords, the actual result is
+          dependend on your machines computational power and CPU allocated to
+          your browser.
           <br />
-          In a real world example there are also some additional factors that
-          need to be taken into consideration like the login server response
+          In a real world attack there are also some additional factors that
+          need to be taken into consideration, like the login server response
           time or lock out time.
         </Alert>
       </Stack>
