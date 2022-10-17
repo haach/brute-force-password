@@ -36,7 +36,7 @@ export const PasswordForm: FC = () => {
     setResult(combinations);
   };
   const onWorkerError = (e: ErrorEvent) => {
-    console.log('Error in web worker:', e);
+    console.error('Error in web worker:', e);
   };
 
   const formik = useFormik<FormValues>({
@@ -57,13 +57,17 @@ export const PasswordForm: FC = () => {
     onSubmit: (values) => {
       if (formik.isValid) {
         start(); // Start timer
-        registerWebWorker(onWorkerMessage, onWorkerError).then((worker) => {
-          // Send form values to worker
-          worker.postMessage({
-            password: values.pass,
-            ranges: detectedRanges,
+        registerWebWorker(onWorkerMessage, onWorkerError)
+          .then((worker) => {
+            // Send form values to worker
+            worker.postMessage({
+              password: values.pass,
+              ranges: detectedRanges,
+            });
+          })
+          .catch((e) => {
+            console.error('e', e);
           });
-        });
       }
     },
   });
@@ -191,7 +195,7 @@ export const PasswordForm: FC = () => {
               padding: '1rem 1.5rem',
             }}
           >
-            Password "{<b>formik.values.pass</b>}" detected{' '}
+            Password <b>"{formik.values.pass}"</b> detected{' '}
             {time > 0 ? `in ${time / 10}s` : `in under 1 second`} with{' '}
             {result.toLocaleString()} combinations
           </Box>
