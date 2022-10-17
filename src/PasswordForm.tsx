@@ -196,7 +196,7 @@ export const PasswordForm: FC = () => {
             }}
           >
             Password <b>"{formik.values.pass}"</b> detected{' '}
-            {time > 0 ? `in ${time / 10}s` : `in under 1 second`} with{' '}
+            {time > 0 ? `in ${time / 10}s` : `in under 100 milliseconds`} with{' '}
             {result.toLocaleString()} combinations
           </Box>
         )}
