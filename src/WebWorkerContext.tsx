@@ -37,8 +37,8 @@ export const WebWorkerContextProvider: ComponentWithChildren = ({
     onMessage: messageCallBackFnRef,
     onError?: errorCallBackFnRef
   ): Promise<Worker> =>
-    new Promise((resolve, reject) => {
-      const worker = new Worker('src/BruteForceWorker.js');
+    new Promise((resolve, _reject) => {
+      const worker = new Worker('/BruteForceWorker.js');
       worker.onmessage = onMessage;
       if (onError) worker.onerror = onError;
       setWorker(worker);
