@@ -104,13 +104,13 @@ export const PasswordForm: FC = () => {
           This app is a simple representation of the correlation of a password's
           length, character set and resulting security. Simply enter a test
           password below. The app then will try to guess your password using a
-          brute force algorythm and show the time and combinations needed to get
+          brute force algorithm and show the time and combinations needed to get
           to the result.
         </Typography>
 
         <Box sx={{ display: 'flex', gap: [1, 2, 3], flexWrap: 'wrap' }}>
           <ChipWithIcon
-            label="Alphabetical letters"
+            label="Letters"
             isActive={detectedRanges.includes('az')}
           />
 
@@ -201,9 +201,9 @@ export const PasswordForm: FC = () => {
           </Box>
         )}
         <Alert severity="info">
-          The brute force algorythm runs locally inside your browser. While this
-          is very save for testing your passwords, the actual result is
-          dependend on your machines computational power and CPU allocated to
+          The brute force algorithm runs locally inside your browser. While this
+          is very safe for testing your passwords, the actual result is
+          dependent on your machine's computational power and CPU allocated to
           your browser.
           <br />
           In a real world attack there are also some additional factors that
