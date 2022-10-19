@@ -159,7 +159,11 @@ export const PasswordForm: FC = () => {
             }}
           />
 
-          <Button variant="outlined" type="submit" disabled={running}>
+          <Button
+            variant="outlined"
+            type="submit"
+            disabled={!formik.values.pass || running}
+          >
             Hack it!
           </Button>
         </Stack>
@@ -174,6 +178,7 @@ export const PasswordForm: FC = () => {
               padding: '15px 25px',
               borderRadius: '6px',
             }}
+            role="result"
           >
             <span>Running for {time / 10}s</span>
             <Button
@@ -192,8 +197,10 @@ export const PasswordForm: FC = () => {
           <Box
             sx={{
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              padding: '1rem 1.5rem',
+              padding: '15px 25px',
+              borderRadius: '6px',
             }}
+            role="result"
           >
             Password <b>"{formik.values.pass}"</b> detected{' '}
             {time > 0 ? `in ${time / 10}s` : `in under 100 milliseconds`} with{' '}
