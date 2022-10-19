@@ -87,7 +87,7 @@ export const PasswordForm: FC = () => {
       <Stack
         spacing={4}
         maxWidth={1000}
-        padding={[4, 10]}
+        padding={[1, 4, 10]}
         sx={{
           margin: 'auto',
         }}
@@ -155,7 +155,8 @@ export const PasswordForm: FC = () => {
             helperText={formik.errors.pass}
             error={Boolean(formik.errors.pass && formik.touched.pass)}
             sx={{
-              minWidth: 300,
+              width: 300,
+              maxWidth: 'calc( 100% - 102px)',
             }}
           />
 

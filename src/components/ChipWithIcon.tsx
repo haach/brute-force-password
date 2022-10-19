@@ -9,7 +9,6 @@ export const ChipWithIcon: FC<{ label: string; isActive: boolean }> = ({
 }) => {
   return (
     <Chip
-      disabled={!isActive}
       role={`range-checkbox-${label.replaceAll(' ', '-')}`}
       label={label}
       size="small"
